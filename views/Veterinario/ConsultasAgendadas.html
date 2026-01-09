@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeniPet - Consultas del Día</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css' rel='stylesheet' />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+   <!-- REEMPLAZA SOLO ESTA PARTE DEL <style> EN TU ARCHIVO ANTERIOR -->
+
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        font-family: 'Poppins', sans-serif;
+        padding: 2rem 1rem;
+    }
+    header { animation: float 6s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    .logo-circle {
+        width:70px;height:70px;
+        background:linear-gradient(135deg,#4facfe,#00f2fe);
+        border-radius:50%;display:flex;align-items:center;justify-content:center;
+        font-size:2.5rem;box-shadow:0 12px 30px rgba(79,172,254,.5);
+    }
+    .card-glow {
+        background:white;border-radius:2.8rem;padding:3rem;
+        box-shadow:0 25px 70px rgba(0,0,0,.28);
+        transition:all .4s;
+    }
+    .card-glow:hover { transform:translateY(-10px); }
+    .cita-card {
+        background:linear-gradient(135deg,#667eea,#764ba2);
+        color:white;border-radius:2rem;padding:1.8rem;
+        box-shadow:0 15px 40px rgba(102,126,234,.4);
+        transition:all .3s;
+    }
+    .cita-card:hover { transform:translateY(-8px); }
+
+    /* COLORES CLARITOS Y PROFESIONALES PARA EL CALENDARIO */
+    .fc-event {
+        background-color: rgba(102, 126, 234, 0.25) !important;
+        border: 1px solid rgba(102, 126, 234, 0.4) !important;
+        color: #333 !important;
+        font-weight: 600;
+        border-radius: 12px;
+        padding: 4px 8px;
+    }
+    .fc-event:hover {
+        background-color: rgba(102, 126, 234, 0.4) !important;
+    }
+    .fc .fc-daygrid-day.fc-day-today {
+        background:rgba(102,126,234,.15);
+    }
+</style>
+</head>
+<body>
+
+    <!-- CABECERA OFICIAL VENIPET (IGUAL QUE TODAS TUS VISTAS) -->
+    <header class="bg-white rounded-pill shadow-lg p-4 mb-5">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-lg-6 d-flex align-items-center gap-4">
+                    <div class="logo-circle">Huella</div>
+                    <h1 class="mb-0 display-5 fw-bold text-primary">VeniPet</h1>
+                </div>
+                <div class="col-lg-6 text-end">
+                    <div class="d-inline-flex align-items-center gap-4">
+                        <button class="btn btn-outline-primary px-4 py-2 rounded-pill" onclick="location.href='panel-veterinario.html'">
+                            Panel Principal
+                        </button>
+                        <i class="bi bi-person-badge-fill fs-2 text-primary"></i>
+                        <span class="fw-bold fs-5 text-dark">Dra. María López</span>
+                        <button class="btn btn-danger rounded-pill px-4" onclick="alert('Sesión cerrada')">
+                            Salir
+, cerrar sesión
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2 class="text-center text-white fw-bold mb-5 display-5">
+            Mis Consultas del Día — Jueves 27 de Noviembre 2025
+        </h2>
+
+        <div class="row g-5">
+            <!-- LISTA DE CITAS DE HOY -->
+            <div class="col-lg-4">
+                <div class="card-glow">
+                    <h4 class="text-primary fw-bold text-center mb-4">
+                        Citas Programadas Hoy <span class="badge bg-primary fs-5">5</span>
+                    </h4>
+                    <div id="listaHoy"></div>
+                </div>
+            </div>
+
+            <!-- CALENDARIO COMPLETO -->
+            <div class="col-lg-8">
+                <div class="card-glow">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLE -->
+    <div class="modal fade" id="modalCita" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-4">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Detalle de la Cita</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detalleModal"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-warning rounded-pill px-4" onclick="reagendar()">Reagendar</button>
+                    <button class="btn btn-danger rounded-pill px-4" onclick="cancelar()">Cancelar Cita</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+    <script>
+        const citas = [
+            {id:1,title:"Max – Vacunación",start:"2025-11-27T10:30:00",mascota:"Max",dueño:"Juan Pérez",tel:"55 1234 5678",motivo:"Vacunación anual",estado:"pendiente"},
+            {id:2,title:"Luna – Control",start:"2025-11-27T11:30:00",mascota:"Luna",dueño:"Ana Gómez",tel:"55 9876 5432",motivo:"Control de peso",estado:"pendiente"},
+            {id:3,title:"Rocky – Desparasitación",start:"2025-11-27T14:00:00",mascota:"Rocky",dueño:"Carlos Ruiz",tel:"55 5555 1111",motivo:"Desparasitación",estado:"en-consulta"},
+            {id:4,title:"Bella – Esterilización",start:"2025-11-27T15:30:00",mascota:"Bella",dueño:"Laura Mendoza",tel:"55 4444 2222",motivo:"Esterilización",estado:"pendiente"},
+            {id:5,title:"Toby – Dental",start:"2025-11-27T16:45:00",mascota:"Toby",dueño:"Pedro Sánchez",tel:"55 3333 9999",motivo:"Limpieza dental",estado:"completada"},
+            {id:6,title:"Coco – Urgencia",start:"2025-12-02T09:00:00",mascota:"Coco",dueño:"Sofía",tel:"55 1111 2222",motivo:"Urgencia",estado:"pendiente"},
+            {id:7,title:"Kiara – Vacuna",start:"2025-12-10T12:00:00",mascota:"Kiara",dueño:"Miguel",tel:"55 7777 8888",motivo:"Vacuna",estado:"pendiente"}
+        ];
+
+        let citaSeleccionada = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // LISTA DE HOY
+            const hoy = citas.filter(c => c.start.startsWith('2025-11-27'));
+            const lista = document.getElementById('listaHoy');
+            hoy.forEach(c => {
+                const badge = c.estado === 'pendiente' ? 'bg-success' : c.estado === 'en-consulta' ? 'bg-info' : 'bg-secondary text-white';
+                lista.innerHTML += `
+                <div class="cita-card mb-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="mb-1">${c.mascota}</h5>
+                            <p class="mb-1 opacity-90">${c.start.split('T')[1].slice(0,5)} – ${c.motivo}</p>
+                            <small>${c.dueño} • ${c.tel}</small>
+                        </div>
+                        <span class="badge ${badge} fs-6 px-3 py-2">${c.estado.toUpperCase()}</span>
+                    </div>
+                </div>`;
+            });
+
+            // CALENDARIO
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana', day: 'Día' },
+                events: citas.map(c => ({
+                    id: c.id,
+                    title: c.title,
+                    start: c.start,
+                    classNames: `fc-event ${c.estado}`
+                })),
+                eventClick: function (info) {
+                    citaSeleccionada = citas.find(x => x.id == info.event.id);
+                    document.getElementById('detalleModal').innerHTML = `
+                        <div class="row g-4">
+                            <div class="col-md-6"><strong>Mascota:</strong> ${citaSeleccionada.mascota}</div>
+                            <div class="col-md-6"><strong>Dueño:</strong> ${citaSeleccionada.dueño}</div>
+                            <div class="col-md-6"><strong>Teléfono:</strong> ${citaSeleccionada.tel}</div>
+                            <div class="col-md-6"><strong>Motivo:</strong> ${citaSeleccionada.motivo}</div>
+                            <div class="col-12"><strong>Hora:</strong> ${new Date(citaSeleccionada.start).toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'})}</div>
+                            <div class="col-12"><strong>Estado:</strong> <span class="badge ${citaSeleccionada.estado==='pendiente'?'bg-success':citaSeleccionada.estado==='en-consulta'?'bg-info':'bg-secondary text-white'} fs-6">${citaSeleccionada.estado.toUpperCase()}</span></div>
+                        </div>`;
+                    new bootstrap.Modal(document.getElementById('modalCita')).show();
+                }
+            });
+            calendar.render();
+        });
+
+        function cancelar() {
+            Swal.fire({
+                title: 'Cancelar cita',
+                text: `¿Cancelar la cita de ${citaSeleccionada.mascota} con ${citaSeleccionada.dueño}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cancelar',
+                cancelButtonText: 'No'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    Swal.fire('Cancelada', 'La cita ha sido cancelada.', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('modalCita')).hide();
+                }
+            });
+        }
+
+        function reagendar() {
+            Swal.fire({
+                title: 'Reagendar cita',
+                html: `
+                    <input type="date" id="nuevaFecha" class="swal2-input" min="2025-11-28">
+                    <select id="nuevaHora" class="swal2-input">
+                        <option>09:00</option><option>10:00</option><option>11:00</option>
+                        <option>14:00</option><option>15:00</option><option>16:00</option>
+                    </select>`,
+                showCancelButton: true,
+                confirmButtonText: 'Reagendar',
+                preConfirm: () => {
+                    const fecha = document.getElementById('nuevaFecha').value;
+                    const hora = document.getElementById('nuevaHora').value;
+                    if (!fecha || !hora) {
+                        Swal.showValidationMessage('Completa fecha y hora');
+                        return false;
+                    }
+                    return fecha + ' a las ' + hora;
+                }
+            }).then(result => {
+                if (result.isConfirmed) {
+                    Swal.fire('Reagendada', 'Cita movida al ' + result.value, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('modalCita')).hide();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

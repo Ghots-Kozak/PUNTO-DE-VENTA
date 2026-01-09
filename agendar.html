@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeniPet - Agendar Consulta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-12px)
+            }
+        }
+
+        .logo-circle {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            box-shadow: 0 12px 30px rgba(79, 172, 254, .5);
+            color: white;
+        }
+
+        .fc-event {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            padding: 6px;
+        }
+
+        .btn-venipet {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- CABECERA -->
+    <header class="bg-white rounded-pill shadow-lg p-4 mb-5">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-lg-6 d-flex align-items-center gap-4">
+                    <div class="logo-circle">Huella</div>
+                    <h1 class="mb-0 display-5 fw-bold text-primary">VeniPet</h1>
+                </div>
+                <div class="col-lg-6 text-end">
+                    <div class="d-inline-flex align-items-center gap-4">
+                        <button class="btn btn-outline-primary px-4 py-2 rounded-pill"
+                            onclick="location.href='ClientePrincipal.html'">Volver al Inicio</button>
+                        <i class="bi bi-person-circle fs-2 text-primary"></i>
+                        <span id="nombreUsuario" class="fw-bold fs-5 text-dark">Cargando...</span>
+                        <button class="btn btn-danger rounded-pill px-4" onclick="cerrarSesion()">Salir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="bg-white rounded-4 shadow-lg p-5">
+            <h2 class="text-center fw-bold mb-5 text-primary">Agendar Consulta para tu Mascota</h2>
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal fade" id="modalAgendar" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-4">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Agendar Consulta - <span id="fechaSeleccionada"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAgendar">
+                        <input type="hidden" id="fechaCita">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Mascota</label>
+                                <select class="form-select form-select-lg" id="mascotaSelect" required></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Hora</label>
+                                <select class="form-select form-select-lg" id="horaSelect" required>
+                                    <option value="">Seleccionar hora</option>
+                                    <option>09:00</option>
+                                    <option>10:00</option>
+                                    <option>11:00</option>
+                                    <option>12:00</option>
+                                    <option>14:00</option>
+                                    <option>15:00</option>
+                                    <option>16:00</option>
+                                    <option>17:00</option>
+                                    <option>18:00</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Veterinario</label>
+                                <select class="form-select form-select-lg" id="veterinarioSelect" required>
+                                    <option value="">Seleccionar</option>
+                                    <option>Dra. María López</option>
+                                    <option>Dr. Carlos Ramírez</option>
+                                    <option>Dra. Ana García</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Motivo</label>
+                                <select class="form-select form-select-lg" id="motivoSelect" required>
+                                    <option value="">Seleccionar motivo</option>
+                                    <option>Vacunación</option>
+                                    <option>Desparasitación</option>
+                                    <option>Consulta general</option>
+                                    <option>Corte de uñas / baño</option>
+                                    <option>Urgencia</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Notas</label>
+                                <textarea class="form-control" id="notas" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-secondary me-3"
+                                data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-venipet text-white px-5">Confirmar Cita</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+    <script>
+        let calendar;
+        const nombreUsuario = localStorage.getItem('nombreUsuario');
+
+        function cerrarSesion() {
+            Swal.fire({ title: '¿Cerrar sesión?', icon: 'question', showCancelButton: true })
+                .then(r => { if (r.isConfirmed) { localStorage.clear(); location.href = 'login.html'; } });
+        }
+
+
+        function cargarCitasLocal() {
+            const guardadas = localStorage.getItem('citas_venipet_' + nombreUsuario);
+            return guardadas ? JSON.parse(guardadas) : [];
+        }
+
+
+        function guardarCitaLocal(cita) {
+            const citas = cargarCitasLocal();
+            citas.push(cita);
+            localStorage.setItem('citas_venipet_' + nombreUsuario, JSON.stringify(citas));
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!nombreUsuario) {
+                location.href = 'login.html';
+                return;
+            }
+            document.getElementById('nombreUsuario').textContent = nombreUsuario;
+
+            try {
+                const res = await fetch('/api/usuario-actual', {
+                    headers: { 'x-nombre-usuario': nombreUsuario }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const select = document.getElementById('mascotaSelect');
+                    select.innerHTML = '<option value="">Seleccionar mascota</option>';
+                    data.mascotas.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id_mascota;
+                        opt.textContent = `${m.nombre} - ${m.especie}`;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (e) { }
+
+
+            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
+                events: cargarCitasLocal(),
+
+                eventDidMount: info => {
+                    info.el.style.cssText = 'background: linear-gradient(135deg, #667eea, #764ba2)!important; border:none; border-radius:12px; color:white; font-weight:bold;';
+                },
+
+                dateClick: info => {
+                    document.getElementById('fechaCita').value = info.dateStr;
+                    document.getElementById('fechaSeleccionada').textContent =
+                        new Date(info.dateStr).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                    new bootstrap.Modal(document.getElementById('modalAgendar')).show();
+                }
+            });
+            calendar.render();
+        });
+
+
+        document.getElementById('formAgendar').onsubmit = async e => {
+            e.preventDefault();
+
+            const cita = {
+                id_mascota: document.getElementById('mascotaSelect').value,
+                fecha: document.getElementById('fechaCita').value,
+                hora: document.getElementById('horaSelect').value,
+                veterinario: document.getElementById('veterinarioSelect').value,
+                motivo: document.getElementById('motivoSelect').value,
+                notas: document.getElementById('notas').value || '',
+                nombre_usuario: nombreUsuario
+            };
+
+
+            try {
+                const res = await fetch('/api/guardar-cita', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cita)
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error();
+            } catch (e) {
+                console.log("No se pudo guardar en BD, pero sigue funcionando");
+            }
+
+
+            const eventoParaCalendario = {
+                title: `${document.getElementById('mascotaSelect').selectedOptions[0].text} - ${cita.motivo}`,
+                start: `${cita.fecha}T${cita.hora}:00`,
+                extendedProps: { veterinario: cita.veterinario, notas: cita.notas }
+            };
+            guardarCitaLocal(eventoParaCalendario);
+
+            // Actualizar calendario al instante
+            calendar.addEvent(eventoParaCalendario);
+
+            // Cerrar y limpiar
+            bootstrap.Modal.getInstance(document.getElementById('modalAgendar')).hide();
+            document.getElementById('formAgendar').reset();
+            Swal.fire('¡Perfecto!', 'Cita agendada con éxito', 'success');
+        };
+    </script>
+</body>
+
+</html>

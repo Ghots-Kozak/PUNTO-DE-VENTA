@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeniPet - Mis Pacientes Asignados</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; font-family: 'Poppins', sans-serif; padding: 2rem 1rem; }
+        header { animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+        .logo-circle { width:70px;height:70px;background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;box-shadow:0 12px 30px rgba(79,172,254,.5); }
+        .card-glow { background:white;border-radius:2.8rem;padding:3rem;box-shadow:0 25px 70px rgba(0,0,0,.28);transition:all .4s; }
+        .card-glow:hover { transform:translateY(-10px); }
+        .dueño-card { background:linear-gradient(135deg,#667eea,#764ba2);color:white;border-radius:2.2rem;padding:2.5rem;text-align:center;box-shadow:0 20px 50px rgba(102,126,234,.45);margin-bottom:2.5rem; }
+        .mascota-card { background:white;border-radius:2rem;padding:2rem;cursor:pointer;transition:all .4s;box-shadow:0 15px 40px rgba(0,0,0,.15);border:3px solid transparent; }
+        .mascota-card:hover { transform:translateY(-12px);border-color:#667eea;box-shadow:0 25px 60px rgba(102,126,234,.3); }
+        .mascota-card:active { transform:scale(0.98); }
+        .historial-table thead { background:linear-gradient(135deg,#667eea,#764ba2);color:white; }
+        .historial-table tbody tr:hover { background:rgba(102,126,234,.08); }
+    </style>
+</head>
+<body>
+
+    <!-- CABECERA OFICIAL -->
+    <header class="bg-white rounded-pill shadow-lg p-4 mb-5">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-lg-6 d-flex align-items-center gap-4">
+                    <div class="logo-circle">Huella</div>
+                    <h1 class="mb-0 display-5 fw-bold text-primary">VeniPet</h1>
+                </div>
+                <div class="col-lg-6 text-end">
+                    <div class="d-inline-flex align-items-center gap-4">
+                        <button class="btn btn-outline-primary rounded-pill px-4" onclick="location.href='panel-veterinario.html'">Panel Principal</button>
+                        <i class="bi bi-person-badge-fill fs-2 text-primary"></i>
+                        <span class="fw-bold fs-5 text-dark">Dra. María López</span>
+                        <button class="btn btn-danger rounded-pill px-4" onclick="alert('Sesión cerrada')">Salir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2 class="text-center text-white fw-bold mb-5 display-5">Mis Pacientes Asignados</h2>
+
+        <!-- DUEÑO 1 -->
+        <div class="dueño-card">
+            <h3 class="fw-bold mb-1">Juan Antonio Pérez Gómez</h3>
+            <p class="mb-0 opacity-90">Tel: 55 1234 5678 • juan.perez@gmail.com</p>
+        </div>
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <div class="mascota-card text-center" onclick="mostrarInfo('max')">
+                    <i class="bi bi-heart-fill text-primary" style="font-size:4rem;"></i>
+                    <h4 class="mt-3 fw-bold text-primary">Max</h4>
+                    <p class="text-muted">Golden Retriever • 7 años</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mascota-card text-center" onclick="mostrarInfo('luna')">
+                    <i class="bi bi-moon-fill text-info" style="font-size:4rem;"></i>
+                    <h4 class="mt-3 fw-bold text-primary">Luna</h4>
+                    <p class="text-muted">Gato Persa • 4 años</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DUEÑO 2 -->
+        <div class="dueño-card">
+            <h3 class="fw-bold mb-1">Ana Laura Gómez Hernández</h3>
+            <p class="mb-0 opacity-90">Tel: 55 9876 5432 • ana.gomez@hotmail.com</p>
+        </div>
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <div class="mascota-card text-center" onclick="mostrarInfo('rocky')">
+                    <i class="bi bi-lightning-charge-fill text-warning" style="font-size:4rem;"></i>
+                    <h4 class="mt-3 fw-bold text-primary">Rocky</h4>
+                    <p class="text-muted">Labrador • 5 años</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mascota-card text-center" onclick="mostrarInfo('bella')">
+                    <i class="bi bi-flower1 text-danger" style="font-size:4rem;"></i>
+                    <h4 class="mt-3 fw-bold text-primary">Bella</h4>
+                    <p class="text-muted">Bulldog Francés • 3 años</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DETALLE DE LA MASCOTA SELECCIONADA -->
+        <div class="card-glow" id="detalleMascota" style="display:none;">
+            <div class="row">
+                <div class="col-lg-4 text-center">
+                    <div class="icon-circle mx-auto mb-4" style="width:160px;height:160px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:5.5rem;color:white;box-shadow:0 25px 60px rgba(102,126,234,.5);">
+                        <i id="iconoMascota"></i>
+                    </div>
+                    <h3 class="fw-bold text-primary" id="nombreM"></h3>
+                    <p class="text-muted" id="dueñoM"></p>
+                </div>
+                <div class="col-lg-8">
+                    <h4 class="fw-bold text-primary mb-4">Información Clínica</h4>
+                    <div id="infoClinica" class="row g-3"></div>
+                    <h4 class="fw-bold text-primary mt-5 mb-4">Historial de Consultas</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover historial-table">
+                            <thead><tr><th>Fecha</th><th>Motivo</th><th>Veterinario</th><th>Diagnóstico</th><th>Estado</th></tr></thead>
+                            <tbody id="historialBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const datos = {
+            max: {icono:"bi bi-heart-fill",nombre:"Max",dueño:"Juan Pérez",especie:"Perro",raza:"Golden Retriever",edad:"7 años",peso:"32 kg",color:"Dorado",esterilizado:"Sí",microchip:"987654321098",notas:"Alergia leve al pollo",historial:[
+                {fecha:"10/10/2025",motivo:"Vacunación",vet:"Dra. María López",diag:"Vacuna antirrábica aplicada",estado:"Completada"},
+                {fecha:"15/07/2025",motivo:"Consulta general",vet:"Dr. Carlos Ramírez",diag:"Todo en orden",estado:"Completada"}
+            ]},
+            luna: {icono:"bi bi-moon-fill",nombre:"Luna",dueño:"Juan Pérez",especie:"Gato",raza:"Persa",edad:"4 años",peso:"4.2 kg",color:"Blanco",esterilizado:"Sí",microchip:"No",notas:"Le encanta dormir en lugares altos",historial:[
+                {fecha:"08/09/2025",motivo:"Desparasitación",vet:"Dra. Ana García",diag:"Desparasitante oral",estado:"Completada"}
+            ]},
+            rocky: {icono:"bi bi-lightning-charge-fill",nombre:"Rocky",dueño:"Ana Gómez",especie:"Perro",raza:"Labrador",edad:"5 años",peso:"35 kg",color:"Chocolate",esterilizado:"No",microchip:"123456789012",notas:"Hiperactivo",historial:[
+                {fecha:"12/11/2025",motivo:"Vacunación",vet:"Dra. María López",diag:"Refuerzo anual",estado:"Completada"},
+                {fecha:"05/08/2025",motivo:"Revisión ortopédica",vet:"Dra. María López",diag:"Articulaciones sanas",estado:"Completada"}
+            ]},
+            bella: {icono:"bi bi-flower1",nombre:"Bella",dueño:"Ana Gómez",especie:"Perro",raza:"Bulldog Francés",edad:"3 años",peso:"11 kg",color:"Atigrado",esterilizado:"Sí",microchip:"Sí",notas:"Ronca mucho",historial:[
+                {fecha:"25/10/2025",motivo:"Control respiratorio",vet:"Dra. María López",diag:"Vías despejadas",estado:"Completada"}
+            ]}
+        };
+
+        function mostrarInfo(id) {
+            const d = datos[id];
+            document.getElementById('iconoMascota').className = d.icono;
+            document.getElementById('nombreM').textContent = d.nombre;
+            document.getElementById('dueñoM').textContent = "Dueño: " + d.dueño;
+
+            document.getElementById('infoClinica').innerHTML = `
+                <div class="col-md-6"><strong>Especie:</strong> ${d.especie}</div>
+                <div class="col-md-6"><strong>Raza:</strong> ${d.raza}</div>
+                <div class="col-md-6"><strong>Edad:</strong> ${d.edad}</div>
+                <div class="col-md-6"><strong>Peso:</strong> ${d.peso}</div>
+                <div class="col-md-6"><strong>Color:</strong> ${d.color}</div>
+                <div class="col-md-6"><strong>Esterilizado:</strong> ${d.esterilizado}</div>
+                <div class="col-md-6"><strong>Microchip:</strong> ${d.microchip}</div>
+                <div class="col-12 mt-3 fst-italic text-muted"><strong>Notas:</strong> ${d.notas}</div>`;
+
+            const tbody = document.getElementById('historialBody');
+            tbody.innerHTML = '';
+            d.historial.forEach(h => {
+                tbody.innerHTML += `<tr>
+                    <td><strong>${h.fecha}</strong></td>
+                    <td>${h.motivo}</td>
+                    <td>${h.vet}</td>
+                    <td>${h.diag}</td>
+                    <td><span class="badge bg-success px-3 py-2">Completada</span></td>
+                </tr>`;
+            });
+
+            document.getElementById('detalleMascota').style.display = 'block';
+            window.scrollTo({top: document.getElementById('detalleMascota').offsetTop - 100, behavior: 'smooth'});
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¿Quieres ser mi novia? 💕</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            height:100vh;
+            background:linear-gradient(-45deg,#ff9a9e,#fad0c4,#fad0c4,#ff9a9e);
+            background-size:400% 400%;
+            animation:gradient 15s ease infinite;
+            font-family:'Poppins',sans-serif;
+            overflow:hidden;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            color:white;
+        }
+        @keyframes gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        
+        .corazon{
+            position:absolute;
+            font-size:2.5rem;
+            pointer-events:none;
+            opacity:0.7;
+            animation:flotar linear infinite;
+            z-index:1;
+        }
+        @keyframes flotar{
+            0%{transform:translateY(100vh) rotate(0deg);}
+            100%{transform:translateY(-150px) rotate(360deg); opacity:0;}
+        }
+
+        h1{
+            font-size:5rem;
+            text-shadow:0 0 30px rgba(255,20,120,0.8);
+            margin-bottom:80px;
+            animation:pulso 2s infinite;
+            z-index:10;
+        }
+        @keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+
+        button{
+            padding:22px 65px;
+            font-size:2.3rem;
+            border:none;
+            border-radius:60px;
+            cursor:pointer;
+            font-weight:bold;
+            box-shadow:0 15px 40px rgba(0,0,0,0.4);
+            transition:transform .3s, box-shadow .3s;
+            z-index:10;
+        }
+        #si{
+            background:linear-gradient(45deg,#ff1493,#ff69b4);
+            color:white;
+        }
+        #si:hover{
+            transform:translateY(-12px) scale(1.2);
+            box-shadow:0 30px 60px rgba(255,20,147,0.6);
+        }
+        #no{
+            background:#222;
+            color:white;
+            position:fixed;        /* Cambiado a fixed → rendimiento brutal */
+            transition:transform 0.12s ease-out;
+            user-select:none;
+        }
+
+        .final{
+            display:none;
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.95);
+            color:white;
+            font-size:7rem;
+            text-align:center;
+            justify-content:center;
+            align-items:center;
+            flex-direction:column;
+            z-index:999;
+        }
+        .final h2{
+            font-size:8.5rem;
+            background:linear-gradient(45deg,#ff1493,#ff69b4,#ffd700);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+        }
+        .corazones-gigantes{font-size:12rem; animation:latido 1s infinite;}
+        @keyframes latido{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <h1>¿Quieres ser mi novia? 💖</h1>
+    <button id="si">¡SÍ, MI AMOR! ✨</button>
+    <button id="no">No</button>
+
+    <div class="final" id="final">
+        <h2>¡LO SABÍA!</h2>
+        <div class="corazones-gigantes">💕💍💕</div>
+        <p style="font-size:4rem;margin-top:30px;">¡Te amo eternamente! 🥰</p>
+    </div>
+
+    <script>
+        const noBtn = document.getElementById('no');
+        const siBtn = document.getElementById('si');
+        const final = document.getElementById('final');
+
+        // Dimensiones del botón (aprox)
+        const btnW = 180;
+        const btnH = 85;
+        const margen = 100; // Distancia mínima desde los bordes
+
+        let posX = window.innerWidth / 2;
+        let posY = window.innerHeight / 2 + 120;
+        let velX = 0;
+        let velY = 0;
+
+        // Posicionar inicialmente
+        noBtn.style.left = posX - btnW/2 + 'px';
+        noBtn.style.top = posY - btnH/2 + 'px';
+
+        // === CORAZONES FLOTANTES ===
+        setInterval(() => {
+            const c = document.createElement('div');
+            c.classList.add('corazon');
+            c.textContent = ['❤️','💕','💖','💘'][Math.floor(Math.random()*4)];
+            c.style.left = Math.random()*100 + 'vw';
+            c.style.animationDuration = (Math.random()*6 + 9) + 's';
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 16000);
+        }, 450);
+
+        // === MOVIMIENTO DEL BOTÓN "NO" (máximo rendimiento) ===
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+
+        function animarNo() {
+            const rect = noBtn.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            const dx = mouseX - centerX;
+            const dy = mouseY - centerY;
+            const distancia = Math.hypot(dx, dy);
+
+            // Solo reacciona si el mouse está cerca
+            if (distancia < 220) {
+                const fuerza = (220 - distancia) / 220 * 28; // Máximo 28px por frame
+                velX = (dx/distancia || 0) * fuerza * -1.5; // Se aleja del mouse
+                velY = (dy/distancia || 0) * fuerza * -1.5;
+            } else {
+                // Fricción suave cuando está lejos
+                velX *= 0.92;
+                velY *= 0.92;
+            }
+
+            posX += velX;
+            posY += velY;
+
+            // === LÍMITES PERFECTOS PARA QUE NUNCA DESAPAREZCA ===
+            posX = Math.max(margen + btnW/2, Math.min(window.innerWidth - margen - btnW/2, posX));
+            posY = Math.max(margen + btnH/2, Math.min(window.innerHeight - margen - btnH/2, posY));
+
+            noBtn.style.transform = `translate(${posX - btnW/2}px, ${posY - btnH/2}px)`;
+
+            requestAnimationFrame(animarNo);
+        }
+        requestAnimationFrame(animarNo);
+
+        // === AL DECIR SÍ ===
+        siBtn.addEventListener('click', () => {
+            final.style.display = 'flex';
+            // Explosión de corazones
+            for(let i=0; i<150; i++){
+                setTimeout(()=>{
+                    const c=document.createElement('div');
+                    c.classList.add('corazon');
+                    c.textContent=['💖','💕','❤️','💘','✨','🥰'][Math.floor(Math.random()*6)];
+                    c.style.left=Math.random()*100+'vw';
+                    c.style.fontSize=Math.random()*5+4+'rem';
+                    document.body.appendChild(c);
+                    setTimeout(()=>c.remove(),10000);
+                },i*30);
+            }
+        });
+
+        // Si por algún milagro tocan el "No"
+        noBtn.addEventListener('click', ()=>alert('¡JÁ! ¡NO HAY SALIDA! 😈💕'));
+    </script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeniPet - Historial de Consultas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-12px);
+            }
+        }
+
+        .logo-circle {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            box-shadow: 0 12px 30px rgba(79, 172, 254, 0.5);
+        }
+
+        .card-glow {
+            background: white;
+            border-radius: 2.5rem;
+            padding: 3rem;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25);
+            transition: all 0.4s;
+        }
+
+        .card-glow:hover {
+            transform: translateY(-10px);
+        }
+
+        .mascota-selector {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 2rem;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(102, 126, 234, 0.4);
+        }
+
+        .mascota-selector select {
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 20px;
+            padding: 1rem 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .table-custom {
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .table-custom thead {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .table-custom tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+            transform: scale(1.01);
+            transition: all 0.3s;
+        }
+
+        .badge-completada {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-reagendada {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-cancelada {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- CABECERA -->
+    <header class="bg-white rounded-pill shadow-lg p-4 mb-5">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-lg-6 d-flex align-items-center gap-4">
+                    <div class="logo-circle">Huella</div>
+                    <h1 class="mb-0 display-5 fw-bold text-primary">VeniPet</h1>
+                </div>
+                <div class="col-lg-6 text-end">
+                    <div class="d-inline-flex align-items-center gap-4">
+                        <button class="btn btn-outline-primary px-4 py-2 rounded-pill"
+                            onclick="location.href='panel-cliente.html'">
+                            Regresar al Menú Principal
+                        </button>
+                        <i class="bi bi-person-circle fs-2 text-primary"></i>
+                        <span class="fw-bold fs-5 text-dark">Juan Pérez</span>
+                        <button class="btn btn-danger rounded-pill px-4" onclick="alert('Sesión cerrada')">
+                            Salir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- SELECTOR DE MASCOTA BONITO -->
+        <div class="card-glow mascota-selector mb-5">
+            <h2 class="fw-bold mb-4">
+                Historial de Consultas
+            </h2>
+            <p class="lead mb-4">Selecciona a tu compañero para ver todo su historial médico</p>
+            <select class="form-select form-select-lg w-75 mx-auto" id="selectMascota"
+                onchange="mostrarHistorial(this.value)">
+                <option value="" selected disabled>Elige una mascota</option>
+                <option value="max">Max - Golden Retriever (7 años)</option>
+                <option value="luna">Luna - Gato Persa (4 años)</option>
+                <option value="rocky">Rocky - Labrador (5 años)</option>
+            </select>
+        </div>
+
+        <!-- HISTORIAL ATRACTIVO -->
+        <div class="card-glow" id="historialContainer" style="display: none; opacity: 0; transition: opacity 0.6s;">
+            <h3 class="text-center fw-bold text-primary mb-4">
+                Historial Completo de <span id="nombreMascota" class="text-dark"></span>
+            </h3>
+            <div class="table-responsive table-custom">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Motivo</th>
+                            <th>Veterinario</th>
+                            <th>Diagnóstico / Notas</th>
+                            <th>Costo</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaHistorial"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const datosHistorial = {
+            max: [
+                { fecha: '10/10/2025', hora: '10:30 AM', motivo: 'Vacunación anual', veterinario: 'Dra. María López', comentarios: 'Aplicada vacuna antirrábica. Mascota en buen estado. Recomendación: dieta equilibrada.', costo: '$500.00 MXN', estado: 'Completada' },
+                { fecha: '03/07/2025', hora: '04:15 PM', motivo: 'Consulta general', veterinario: 'Dr. Carlos Ramírez', comentarios: 'Revisión dental completa. Limpieza realizada. Sin problemas mayores detectados.', costo: '$800.00 MXN', estado: 'Completada' },
+                { fecha: '12/04/2025', hora: '11:00 AM', motivo: 'Control de peso', veterinario: 'Dra. María López', comentarios: 'Peso estable. Aconsejado ejercicio diario. Se ajustó alimentación para mantener salud óptima.', costo: '$400.00 MXN', estado: 'Reagendada' },
+                { fecha: '20/01/2025', hora: '09:00 AM', motivo: 'Esterilización', veterinario: 'Dr. Carlos Ramírez', comentarios: 'Procedimiento exitoso. Recuperación rápida. Instrucciones post-operatorias dadas al dueño.', costo: '$2500.00 MXN', estado: 'Completada' },
+                { fecha: '05/12/2024', hora: '02:30 PM', motivo: 'Urgencia por accidente', veterinario: 'Dra. María López', comentarios: 'Tratamiento por herida menor. Vendaje aplicado. No se requiere seguimiento inmediato.', costo: '$1200.00 MXN', estado: 'Cancelada' },
+            ],
+            luna: [
+                { fecha: '15/09/2025', hora: '02:00 PM', motivo: 'Desparasitación', veterinario: 'Dra. Ana García', comentarios: 'Desparasitante oral administrado. Gata sin reacciones adversas. Repetir en 3 meses.', costo: '$300.00 MXN', estado: 'Completada' },
+                { fecha: '08/06/2025', hora: '11:30 AM', motivo: 'Consulta dermatológica', veterinario: 'Dr. Carlos Ramírez', comentarios: 'Tratamiento para alergia cutánea. Crema prescrita. Mejora esperada en 1 semana.', costo: '$600.00 MXN', estado: 'Completada' },
+                { fecha: '25/03/2025', hora: '03:00 PM', motivo: 'Vacunación', veterinario: 'Dra. María López', comentarios: 'Vacuna triple felina aplicada. Recomendado chequeo anual.', costo: '$450.00 MXN', estado: 'Reagendada' },
+                { fecha: '10/12/2024', hora: '10:00 AM', motivo: 'Control anual', veterinario: 'Dra. Ana García', comentarios: 'Examen completo. Todo normal. Peso ideal mantenido.', costo: '$700.00 MXN', estado: 'Completada' },
+                { fecha: '02/11/2024', hora: '04:00 PM', motivo: 'Urgencia digestiva', veterinario: 'Dr. Carlos Ramírez', comentarios: 'Tratamiento para vómitos. Medicamento prescrito. Seguimiento recomendado.', costo: '$900.00 MXN', estado: 'Cancelada' },
+            ],
+            rocky: [
+                { fecha: '20/11/2025', hora: '09:30 AM', motivo: 'Vacunación antirrábica', veterinario: 'Dr. Carlos Ramírez', comentarios: 'Vacuna aplicada. Perro en excelente salud. Recordatorio para refuerzo.', costo: '$400.00 MXN', estado: 'Completada' },
+                { fecha: '05/08/2025', hora: '01:00 PM', motivo: 'Revisión ortopédica', veterinario: 'Dra. María López', comentarios: 'Examen de articulaciones. No se detectaron problemas. Ejercicio moderado.', costo: '$1000.00 MXN', estado: 'Completada' },
+                { fecha: '18/05/2025', hora: '02:30 PM', motivo: 'Desparasitación externa', veterinario: 'Dra. Ana García', comentarios: 'Aplicado antipulgas. Instrucciones para prevención mensual.', costo: '$350.00 MXN', estado: 'Reagendada' },
+                { fecha: '01/02/2025', hora: '11:45 AM', motivo: 'Consulta general', veterinario: 'Dr. Carlos Ramírez', comentarios: 'Chequeo completo. Vacunas al día. Dieta ajustada por edad.', costo: '$550.00 MXN', estado: 'Completada' },
+                { fecha: '15/12/2024', hora: '03:15 PM', motivo: 'Urgencia por cojera', veterinario: 'Dra. María López', comentarios: 'Radiografía realizada. Lesión menor. Reposo y medicamento.', costo: '$1500.00 MXN', estado: 'Cancelada' },
+            ]
+        };
+
+        function mostrarHistorial(mascotaId) {
+            const container = document.getElementById('historialContainer');
+            const nombreSpan = document.getElementById('nombreMascota');
+            const tabla = document.getElementById('tablaHistorial');
+            tabla.innerHTML = '';
+
+            if (mascotaId && datosHistorial[mascotaId]) {
+                const nombreCompleto = document.querySelector(`#selectMascota option[value="${mascotaId}"]`).textContent;
+                nombreSpan.textContent = nombreCompleto;
+                container.style.display = 'block';
+                setTimeout(() => container.style.opacity = '1', 100);
+
+                datosHistorial[mascotaId].forEach(c => {
+                    const badge = c.estado === 'Completada' ? 'badge-completada' :
+                        c.estado === 'Reagendada' ? 'badge-reagendada' : 'badge-cancelada';
+                    tabla.innerHTML += `
+                        <tr>
+                            <td><strong>${c.fecha}</strong></td>
+                            <td>${c.hora}</td>
+                            <td>${c.motivo}</td>
+                            <td>${c.veterinario}</td>
+                            <td>${c.comentarios}</td>
+                            <td><strong>${c.costo}</strong></td>
+                            <td><span class="badge ${badge} px-3 py-2 fs-6">${c.estado}</span></td>
+                        </tr>`;
+                });
+            } else {
+                container.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>

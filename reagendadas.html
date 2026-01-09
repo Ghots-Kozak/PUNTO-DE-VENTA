@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeniPet - Gestionar Citas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; font-family: 'Poppins', sans-serif; padding: 2rem 1rem; }
+        header { animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+        .logo-circle { width:70px;height:70px;background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;box-shadow:0 12px 30px rgba(79,172,254,.5); color:white; }
+
+      
+.fc {
+    font-family: 'Poppins', sans-serif !important;
+}
+
+
+.fc-event {
+    border-radius: 16px !important;
+    border: none !important;
+    padding: 10px 12px !important;
+    margin: 4px 2px !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: white !important;
+    text-align: center !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25) !important;
+    transition: all 0.3s ease !important;
+    white-space: normal !important;
+    line-height: 1.4 !important;
+    min-height: 60px !important;
+    cursor: pointer;
+}
+
+
+.fc-daygrid-event {
+    white-space: normal !important;
+    overflow: visible !important;
+    background-color: black;
+}
+
+
+.fc-event.agendada {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    border-left: 8px solid #1e7e34 !important;
+}
+
+.fc-event.reagendada {
+    background: linear-gradient(135deg, #fd7e14, #ffa726) !important;
+    border-left: 8px solid #e65100 !important;
+    color: #000 !important;
+}
+
+.fc-event.cancelada {
+    background: linear-gradient(135deg, #dc3545, #e74c3c) !important;
+    border-left: 8px solid #c82333 !important;
+    opacity: 0.9;
+    text-decoration: line-through;
+}
+
+
+.fc-event:hover {
+    transform: translateY(-4px) scale(1.03) !important;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4) !important;
+    z-index: 999 !important;
+}
+
+
+.fc-event .fc-event-time {
+    font-size: 0.9rem !important;
+    font-weight: bold !important;
+    opacity: 0.95 !important;
+    margin-bottom: 4px !important;
+}
+
+.fc-event .fc-event-title {
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+
+.fc-theme-standard th {
+    background: #979fa8 !important;
+    color: #333 !important;
+    font-weight: bold !important;
+}
+
+.fc-daygrid-day-number {
+    font-weight: bold !important;
+    color: #333 !important;
+}
+
+.fc-col-header-cell-cushion {
+    font-weight: bold !important;
+    color: #555 !important;
+}
+
+/* Día actual destacado */
+.fc .fc-day-today {
+    background-color: rgba(102, 126, 234, 0.1) !important;
+}
+
+/* Bordes suaves */
+.fc-theme-standard td, .fc-theme-standard th {
+    border: 1px solid #e0e0e0 !important;
+}
+    </style>
+</head>
+<body>
+
+    <!-- CABECERA -->
+    <header class="bg-white rounded-pill shadow-lg p-4 mb-5">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-lg-6 d-flex align-items:center gap-4">
+                    <div class="logo-circle">Huella</div>
+                    <h1 class="mb-0 display-5 fw-bold text-primary">VeniPet</h1>
+                </div>
+                <div class="col-lg-6 text-end">
+                    <div class="d-inline-flex align-items-center gap-4">
+                        <button class="btn btn-outline-primary px-4 py-2 rounded-pill" onclick="location.href='ClientePrincipal.html'">
+                            Menú Principal
+                        </button>
+                        <i class="bi bi-person-circle fs-2 text-primary"></i>
+                        <span id="nombreUsuario" class="fw-bold fs-5 text-dark">Cargando...</span>
+                        <button class="btn btn-danger rounded-pill px-4" onclick="cerrarSesion()">Salir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="bg-white rounded-4 shadow-lg p-5">
+            <h2 class="text-center fw-bold mb-4 text-primary">
+                Gestionar Mis Citas
+            </h2>
+            <p class="text-center text-muted mb-5 lead">Haz clic en cualquier cita para <strong>reagendarla</strong> o <strong>cancelarla</strong></p>
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLE -->
+    <div class="modal fade" id="modalCita" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-4">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Detalles de la Cita</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="detalleCita" class="p-4"></div>
+                    <div class="text-end p-3 border-top">
+                        <button class="btn btn-warning me-3 rounded-pill px-5 shadow" onclick="abrirReagendar()">
+                            Reagendar
+                        </button>
+                        <button class="btn btn-danger rounded-pill px-5 shadow" onclick="cancelarCita()">
+                            Cancelar Cita
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REAGENDAR -->
+    <div class="modal fade" id="modalReagendar" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-4">
+                <div class="modal-header bg-warning text-dark">
+                    <h5>Reagendar Cita</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formReagendar">
+                        <input type="hidden" id="citaIdReagendar">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Nueva Fecha</label>
+                            <input type="date" class="form-control form-control-lg text-center" id="nuevaFecha" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Nueva Hora</label>
+                            <select class="form-select form-select-lg" id="nuevaHora" required>
+                                <option value="">Seleccionar hora</option>
+                                <option>09:00</option><option>10:00</option><option>11:00</option>
+                                <option>12:00</option><option>14:00</option><option>15:00</option>
+                                <option>16:00</option><option>17:00</option><option>18:00</option>
+                            </select>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary me-3 px-4" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-warning px-5 fw-bold">Confirmar Reagendamiento</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+    <script>
+        let calendar;
+        let citaSeleccionada = null;
+        const nombreUsuario = localStorage.getItem('nombreUsuario');
+
+        function cerrarSesion() {
+            Swal.fire({title:'¿Cerrar sesión?',icon:'question',showCancelButton:true})
+                .then(r => { if(r.isConfirmed){ localStorage.clear(); location.href='login.html'; }});
+        }
+
+        async function cargarCitas() {
+            let citas = [];
+            const localKey = 'citas_venipet_' + nombreUsuario;
+
+            // LocalStorage
+            const local = localStorage.getItem(localKey);
+            if (local) citas = JSON.parse(local);
+
+            // Base de Datos
+            try {
+                const res = await fetch('/api/mis-citas', { headers: { 'x-nombre-usuario': nombreUsuario } });
+                const data = await res.json();
+                if (data.success) {
+                    data.citas.forEach(c => {
+                        if (!citas.find(l => l.id === c.id_cita)) {
+                            citas.push({
+                                id: c.id_cita,
+                                title: `${c.nombre_mascota} - ${c.motivo}`,
+                                start: `${c.fecha}T${c.hora}:00`,
+                                extendedProps: { ...c, estado: c.estado || 'agendada' }
+                            });
+                        }
+                    });
+                    localStorage.setItem(localKey, JSON.stringify(citas));
+                }
+            } catch(e) { console.log("Sin conexión a BD, usando solo LocalStorage"); }
+
+            return citas;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!nombreUsuario) return location.href = 'login.html';
+            document.getElementById('nombreUsuario').textContent = nombreUsuario;
+
+            const citas = await cargarCitas();
+
+            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
+                buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana' },
+                events: citas,
+                eventClick: function(info) {
+                    citaSeleccionada = info.event;
+                    const p = info.event.extendedProps;
+
+                    document.getElementById('detalleCita').innerHTML = `
+                        <div class="row g-4 text-start">
+                            <div class="col-md-6"><strong>Mascota:</strong> ${p.nombre_mascota}</div>
+                            <div class="col-md-6"><strong>Motivo:</strong> ${p.motivo}</div>
+                            <div class="col-md-6"><strong>Fecha:</strong> ${new Date(info.event.start).toLocaleDateString('es-MX', {weekday:'long', day:'2-digit', month:'long', year:'numeric'})}</div>
+                            <div class="col-md-6"><strong>Hora:</strong> ${p.hora}</div>
+                            <div class="col-md-6"><strong>Veterinario:</strong> ${p.veterinario}</div>
+                            <div class="col-12"><strong>Estado:</strong> 
+                                <span class="badge fs-5 px-4 py-2 ${
+                                    p.estado === 'cancelada' ? 'bg-danger' : 
+                                    p.estado === 'reagendada' ? 'bg-warning text-dark' : 'bg-success'
+                                }">${(p.estado || 'agendada').toUpperCase()}</span>
+                            </div>
+                        </div>`;
+
+                    if (p.estado === 'cancelada') {
+                        Swal.fire('Cita cancelada', 'No se puede modificar una cita cancelada.', 'info');
+                        return;
+                    }
+                    new bootstrap.Modal(document.getElementById('modalCita')).show();
+                },
+                eventDidMount: function(info) {
+                    const estado = info.event.extendedProps.estado || 'agendada';
+                    info.el.className = info.el.className.replace(/fc-event-\w+/g, '');
+                    info.el.classList.add(`fc-event-${estado}`);
+                }
+            });
+            calendar.render();
+        });
+
+        function abrirReagendar() {
+            bootstrap.Modal.getInstance(document.getElementById('modalCita')).hide();
+            document.getElementById('citaIdReagendar').value = citaSeleccionada.id;
+            document.getElementById('nuevaFecha').value = citaSeleccionada.startStr.split('T')[0];
+            document.getElementById('nuevaHora').value = citaSeleccionada.startStr.split('T')[1]?.slice(0,5);
+            new bootstrap.Modal(document.getElementById('modalReagendar')).show();
+        }
+
+        async function cancelarCita() {
+            const res = await Swal.fire({
+                title: '¿Cancelar esta cita?',
+                text: "Se eliminará permanentemente",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cancelar',
+                cancelButtonText: 'No'
+            });
+
+            if (res.isConfirmed) {
+                try {
+                    await fetch('/api/cancelar-cita', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id_cita: citaSeleccionada.id })
+                    });
+                } catch(e) {}
+
+                // Eliminar del calendario
+                citaSeleccionada.remove();
+
+                // Actualizar LocalStorage
+                let citas = JSON.parse(localStorage.getItem('citas_venipet_' + nombreUsuario) || '[]');
+                citas = citas.filter(c => c.id !== citaSeleccionada.id);
+                localStorage.setItem('citas_venipet_' + nombreUsuario, JSON.stringify(citas));
+
+                bootstrap.Modal.getInstance(document.getElementById('modalCita')).hide();
+                Swal.fire('Cancelada', 'La cita ha sido cancelada', 'success');
+            }
+        }
+
+        document.getElementById('formReagendar').onsubmit = async function(e) {
+            e.preventDefault();
+            const nuevaFecha = document.getElementById('nuevaFecha').value;
+            const nuevaHora = document.getElementById('nuevaHora').value;
+            const idCita = citaSeleccionada.id;
+
+            // ACTUALIZAR EN BD
+            try {
+                const res = await fetch('/api/reagendar-cita', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_cita: idCita, nueva_fecha: nuevaFecha, nueva_hora: nuevaHora })
+                });
+                if (!res.ok) throw new Error();
+            } catch(e) {
+                console.log("Error en BD, pero se actualiza localmente");
+            }
+
+            // ACTUALIZAR EN CALENDARIO
+            const nuevaFechaComple4ta = `${nuevaFecha}T${nuevaHora}:00`;
+            citaSeleccionada.setStart(nuevaFechaComple4ta);
+            citaSeleccionada.setExtendedProp('estado', 'reagendada');
+            citaSeleccionada.setProp('classNames', ['fc-event-reagendada']);
+
+            // ACTUALIZAR LOCALSTORAGE
+            let citas = JSON.parse(localStorage.getItem('citas_venipet_' + nombreUsuario) || '[]');
+            const idx = citas.findIndex(c => c.id === idCita);
+            if (idx !== -1) {
+                citas[idx].start = nuevaFechaComple4ta;
+                citas[idx].extendedProps.estado = 'reagendada';
+            }
+            localStorage.setItem('citas_venipet_' + nombreUsuario, JSON.stringify(citas));
+
+            bootstrap.Modal.getInstance(document.getElementById('modalReagendar')).hide();
+            Swal.fire('Reagendada', `Nueva fecha: ${new Date(nuevaFechaComple4ta).toLocaleDateString('es-MX', {weekday:'long', day:'numeric', month:'long'})} a las ${nuevaHora}`, 'success');
+        };
+    </script>
+</body>
+</html>

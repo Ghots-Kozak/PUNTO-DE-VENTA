@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DELTA - Inventario</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #007BFF 0%, #0056b3 100%);
+            min-height: 100vh;
+            font-family: 'Open Sans', sans-serif;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-12px)
+            }
+        }
+
+        .logo-delta {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #007BFF, #28A745);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 12px 30px rgba(0, 123, 255, .5);
+        }
+
+        .search-input {
+            font-size: 1.4rem;
+            padding: 1rem;
+            border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-inventario {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, .22);
+            overflow: hidden;
+        }
+
+        .table thead {
+            background: #007BFF;
+            color: white;
+        }
+
+        .table-stock-bajo {
+            background: #fff3cd !important;
+        }
+
+        .stock-badge {
+            font-size: 1.3rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+        }
+
+        .btn-nuevo {
+            background: #28A745;
+            font-size: 1.3rem;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-logout {
+            background: #DC3545;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .btn-action {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .btn-edit {
+            background: #ffc107;
+            color: black;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f1f3f5 !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="bg-white rounded-pill shadow-lg p-4 mb-5">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-lg-6 d-flex align-items-center gap-4">
+                    <div class="logo-delta">Δ</div>
+                    <h1 class="mb-0 display-5 fw-bold text-primary">DELTA</h1>
+                </div>
+                <div class="col-lg-6 text-end">
+                    <div class="d-inline-flex align-items-center gap-3">
+                        <i class="bi bi-person-circle fs-2 text-primary"></i>
+                        <span id="nombreUsuario" class="fw-bold fs-5 text-dark">Cargando...</span>
+                        <button class="btn btn-logout px-4" onclick="cerrarSesion()">
+                            <i class="bi bi-box-arrow-right me-2"></i>Salir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-6">
+                <input type="text" id="buscar" class="form-control search-input"
+                    placeholder="Buscar por nombre o código de barras...">
+            </div>
+            <div class="col-md-6 text-end">
+                <button class="btn btn-nuevo text-white" data-bs-toggle="modal" data-bs-target="#modalProducto">
+                    <i class="bi bi-plus-circle-fill me-2"></i> Nuevo Producto
+                </button>
+            </div>
+        </div>
+
+        <div class="card card-inventario">
+            <div class="card-header bg-primary text-white text-center py-4">
+                <h2 class="mb-0">Inventario de Productos</h2>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Producto</th>
+                                <th>Precio Venta</th>
+                                <th>Costo</th>
+                                <th>Stock</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaProductos">
+                            <!-- Productos cargados por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Producto -->
+    <div class="modal fade" id="modalProducto">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalTitulo">Nuevo Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formProducto">
+                        <input type="hidden" id="idProducto">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label>Código de barras</label>
+                                <input type="text" id="codigo" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label>Nombre *</label>
+                                <input type="text" id="nombre" class="form-control" required>
+                            </div>
+                            <div class="col-12">
+                                <label>Descripción</label>
+                                <textarea id="descripcion" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Precio Venta *</label>
+                                <input type="number" id="precio" step="0.01" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Costo *</label>
+                                <input type="number" id="costo" step="0.01" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Stock *</label>
+                                <input type="number" id="stock" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Stock Mínimo</label>
+                                <input type="number" id="stockMin" class="form-control" value="10">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary btn-lg" id="btnGuardar">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let productos = [];  // Guardamos todos los productos aquí
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('nombreUsuario').textContent = localStorage.getItem('nombreUsuario') || 'Dueño';
+            cargarProductos();
+
+            // Búsqueda en tiempo real
+            document.getElementById('buscar').addEventListener('input', filtrarTabla);
+        });
+
+        function cerrarSesion() {
+            Swal.fire({ title: '¿Cerrar sesión?', icon: 'question', showCancelButton: true })
+                .then(r => { if (r.isConfirmed) { localStorage.clear(); location.href = 'login.html'; } });
+        }
+
+        // Cargar todos los productos
+        async function cargarProductos() {
+            try {
+                const res = await fetch('/api/productos');
+                const data = await res.json();
+
+                if (data.success) {
+                    productos = data.productos;  // Guardamos en variable global
+                    renderTabla(productos);
+                } else {
+                    Swal.fire('Error', 'No se pudieron cargar productos', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Servidor no responde', 'error');
+            }
+        }
+
+        // Renderizar tabla
+        function renderTabla(lista) {
+            const tbody = document.getElementById('tablaProductos');
+            tbody.innerHTML = '';
+
+            if (lista.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">No se encontraron productos</td></tr>';
+                return;
+            }
+
+            lista.forEach(p => {
+                const tr = document.createElement('tr');
+                if (p.stock <= p.stock_minimo) tr.classList.add('table-stock-bajo');
+
+                tr.innerHTML = `
+                <td class="fw-bold">${p.codigo_barras || '-'}</td>
+                <td>
+                    <div class="fw-bold">${p.nombre}</div>
+                    <small class="text-muted">${p.descripcion || 'Sin descripción'}</small>
+                </td>
+                <td class="fw-bold text-success">$${parseFloat(p.precio_venta).toFixed(2)}</td>
+                <td>$${parseFloat(p.costo).toFixed(2)}</td>
+                <td>
+                    <span class="badge ${p.stock <= p.stock_minimo ? 'bg-danger' : 'bg-success'} stock-badge fs-5">
+                        ${p.stock}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-edit btn-action me-2" onclick="editarProducto(${p.id_producto})">
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+                    <button class="btn btn-delete btn-action" onclick="eliminarProducto(${p.id_producto})">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </td>
+            `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Filtro por búsqueda
+        function filtrarTabla() {
+            const term = document.getElementById('buscar').value.toLowerCase().trim();
+
+            const filtrados = productos.filter(p =>
+                p.nombre.toLowerCase().includes(term) ||
+                (p.codigo_barras && p.codigo_barras.toLowerCase().includes(term))
+            );
+
+            renderTabla(filtrados);
+        }
+
+        // === CRUD FUNCIONAL (ya lo tenías, pero mejorado) ===
+
+        document.querySelector('[data-bs-target="#modalProducto"]').addEventListener('click', () => {
+            document.getElementById('modalTitulo').textContent = 'Nuevo Producto';
+            document.getElementById('formProducto').reset();
+            document.getElementById('idProducto').value = '';
+        });
+
+        document.getElementById('btnGuardar').addEventListener('click', async () => {
+            const id = document.getElementById('idProducto').value;
+            const producto = {
+                codigo_barras: document.getElementById('codigo').value.trim() || null,
+                nombre: document.getElementById('nombre').value.trim(),
+                descripcion: document.getElementById('descripcion').value.trim() || null,
+                precio_venta: parseFloat(document.getElementById('precio').value),
+                costo: parseFloat(document.getElementById('costo').value),
+                stock: parseInt(document.getElementById('stock').value),
+                stock_minimo: parseInt(document.getElementById('stockMin').value) || 10
+            };
+
+            if (!producto.nombre || isNaN(producto.precio_venta) || isNaN(producto.costo) || isNaN(producto.stock)) {
+                Swal.fire('Error', 'Completa los campos obligatorios', 'error');
+                return;
+            }
+
+            try {
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? `/api/productos/${id}` : '/api/productos';
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(producto)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    Swal.fire('¡Éxito!', id ? 'Producto actualizado' : 'Producto creado', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('modalProducto')).hide();
+                    cargarProductos();  // Recarga lista
+                }
+            } catch (err) {
+                Swal.fire('Error', 'No se pudo guardar', 'error');
+            }
+        });
+
+        window.editarProducto = async (id) => {
+            try {
+                const res = await fetch('/api/productos');
+                const data = await res.json();
+                const p = data.productos.find(prod => prod.id_producto == id);
+
+                if (p) {
+                    document.getElementById('modalTitulo').textContent = 'Editar Producto';
+                    document.getElementById('idProducto').value = p.id_producto;
+                    document.getElementById('codigo').value = p.codigo_barras || '';
+                    document.getElementById('nombre').value = p.nombre;
+                    document.getElementById('descripcion').value = p.descripcion || '';
+                    document.getElementById('precio').value = p.precio_venta;
+                    document.getElementById('costo').value = p.costo;
+                    document.getElementById('stock').value = p.stock;
+                    document.getElementById('stockMin').value = p.stock_minimo;
+
+                    new bootstrap.Modal(document.getElementById('modalProducto')).show();
+                }
+            } catch (err) {
+                Swal.fire('Error', 'No se pudo cargar el producto', 'error');
+            }
+        };
+
+        window.eliminarProducto = (id) => {
+            Swal.fire({
+                title: '¿Eliminar producto?',
+                text: 'No podrás recuperarlo',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar'
+            }).then(async (r) => {
+                if (r.isConfirmed) {
+                    try {
+                        const res = await fetch(`/api/productos/${id}`, { method: 'DELETE' });
+                        const data = await res.json();
+                        if (data.success) {
+                            Swal.fire('Eliminado', 'Producto borrado', 'success');
+                            cargarProductos();
+                        }
+                    } catch (err) {
+                        Swal.fire('Error', 'No se pudo eliminar', 'error');
+                    }
+                }
+            });
+        };
+    </script>
+</body>
+
+</html>

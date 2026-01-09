@@ -1,0 +1,465 @@
+const express = require('express');
+const mysql = require('mysql2');
+const bcrypt = require('bcrypt');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const app = express();
+
+
+const conn = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'root',
+    database: 'venipet_db'
+});
+
+conn.connect(err => {
+    if (err) {
+        console.error('ERROR CONECTANDO BD:', err);
+        process.exit(1);
+    }
+    console.log('BD CONECTADA CORRECTAMENTE');
+});
+
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(__dirname));
+app.use('/uploads', express.static('uploads'));
+
+if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
+
+
+const storage = multer.diskStorage({
+    destination: 'uploads/',
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+});
+const upload = multer({ storage });
+
+
+const query = (sql, params = []) => new Promise((resolve, reject) => {
+    conn.query(sql, params, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+    });
+});
+
+// ========================================
+// 1. REGISTRO DE CUENTA (FormData + upload.none())
+app.post('/auth/register', upload.none(), async (req, res) => {
+    try {
+        const { nombre_completo, telefono, email, password } = req.body;
+        if (!nombre_completo || !telefono || !email || !password) {
+            return res.json({ success: false, msg: 'Faltan datos' });
+        }
+
+        const [existe] = await query('SELECT 1 FROM usuarios WHERE correo = ?', [email]);
+        if (existe) return res.json({ success: false, msg: 'Este correo ya está registrado' });
+
+        const hash = await bcrypt.hash(password, 10);
+        await query(
+            'INSERT INTO usuarios (nombre_completo, telefono, correo, password_hash, id_rol) VALUES (?, ?, ?, ?, 1)',
+            [nombre_completo, telefono, email, hash]
+        );
+
+        console.log('CUENTA CREADA →', email);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('ERROR EN REGISTRO:', err);
+        res.status(500).json({ success: false, msg: 'Error del servidor' });
+    }
+});
+
+// ========================================
+// 2. LOGIN (recibe JSON)
+// ========================================
+// 2. LOGIN MEJORADO: CLIENTES + VETERINARIOS
+app.post('/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) return res.json({ success: false, msg: 'Faltan datos' });
+
+        // PRIMERO: BUSCAR SI ES VETERINARIO
+        const [vet] = await query('SELECT * FROM veterinarios WHERE correo = ?', [email]);
+        if (vet && await bcrypt.compare(password, vet.password_hash)) {
+            return res.json({
+                success: true,
+                nombre: vet.nombre_completo,
+                rol: 'veterinario',
+                redirect: 'VeterinarioPrincipal.html'
+            });
+        }
+
+  
+        const rows = await query(
+            `SELECT u.*, r.nombre_rol 
+             FROM usuarios u 
+             JOIN roles r ON u.id_rol = r.id_rol 
+             WHERE u.correo = ?`,
+            [email]
+        );
+
+        if (rows.length === 0) return res.json({ success: false, msg: 'Usuario no encontrado' });
+
+        const user = rows[0];
+        const valido = await bcrypt.compare(password, user.password_hash);
+        if (!valido) return res.json({ success: false, msg: 'Contraseña incorrecta' });
+
+        const tieneDireccion = user.direccion && user.direccion.trim() !== '';
+
+        if (user.nombre_rol === 'cliente') {
+            if (tieneDireccion) {
+                res.json({
+                    success: true,
+                    redirect: 'ClientePrincipal.html',
+                    nombre: user.nombre_completo,
+                    id_usuario: user.id_usuario,
+                    rol: 'cliente'
+                });
+            } else {
+                res.json({
+                    success: true,
+                    redirect: 'registro-completo.html',
+                    rol: 'cliente'
+                });
+            }
+        } else {
+            res.json({ success: true, redirect: 'ClientePrincipal.html' }); 
+        }
+
+    } catch (err) {
+        console.error('ERROR EN LOGIN:', err);
+        res.status(500).json({ success: false, msg: 'Error del servidor' });
+    }
+});
+// ========================================
+// 3. REGISTRO COMPLETO (dueño + primera mascota)
+app.get('/registro-completo', (req, res) => res.sendFile(path.join(__dirname, 'registro-completo.html')));
+
+app.post('/guardar-registro', upload.single('foto'), async (req, res) => {
+    try {
+        const foto = req.file ? req.file.filename : null;
+        const {
+            nombre_completo, telefono, email, codigo_postal, colonia, direccion,
+            nombre_mascota, fecha_nacimiento, especie, raza, sexo, color,
+            peso, esterilizado, microchip, notas
+        } = req.body;
+
+        await query(
+            `INSERT INTO usuarios 
+             (nombre_completo, telefono, correo, password_hash, id_rol, codigo_postal, colonia, direccion)
+             VALUES (?, ?, ?, ?, 1, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+             nombre_completo=?, telefono=?, codigo_postal=?, colonia=?, direccion=?`,
+            [nombre_completo, telefono, email, 'temp', codigo_postal, colonia, direccion,
+             nombre_completo, telefono, codigo_postal, colonia, direccion]
+        );
+
+        const [user] = await query('SELECT id_usuario FROM usuarios WHERE correo = ?', [email]);
+
+        await query(
+            `INSERT INTO mascotas 
+             (id_dueño, nombre, fecha_nacimiento, especie, raza, sexo, color, peso_kg, esterilizado, microchip, notas, foto)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [user.id_usuario, nombre_mascota, fecha_nacimiento || null, especie, raza || null,
+             sexo, color || null, peso || null, esterilizado || 'No', microchip || 'No',
+             notas || null, foto]
+        );
+
+        console.log('REGISTRO COMPLETO →', email);
+        res.json({ success: true, redirect: 'ClientePrincipal.html' });
+
+    } catch (err) {
+        console.error('ERROR REGISTRO COMPLETO:', err);
+        res.status(500).json({ success: false });
+    }
+});
+
+// ========================================
+// 4. API: DATOS DEL USUARIO ACTUAL + SUS MASCOTAS
+app.get('/api/usuario-actual', async (req, res) => {
+    try {
+        const nombreUsuario = req.headers['x-nombre-usuario'];
+        if (!nombreUsuario) {
+            return res.status(401).json({ success: false, msg: 'No autenticado' });
+        }
+
+        const [usuario] = await query(
+            'SELECT * FROM usuarios WHERE nombre_completo = ?',
+            [nombreUsuario]
+        );
+
+        if (!usuario) {
+            return res.status(404).json({ success: false, msg: 'Usuario no encontrado' });
+        }
+
+        const mascotas = await query(
+            'SELECT * FROM mascotas WHERE id_dueño = ?',
+            [usuario.id_usuario]
+        );
+
+        res.json({
+            success: true,
+            usuario: {
+                nombre_completo: usuario.nombre_completo,
+                telefono: usuario.telefono || '',
+                correo: usuario.correo,
+                codigo_postal: usuario.codigo_postal || '',
+                colonia: usuario.colonia || '',
+                direccion: usuario.direccion || ''
+            },
+            mascotas: mascotas || []
+        });
+
+    } catch (err) {
+        console.error('ERROR EN /api/usuario-actual:', err);
+        res.status(500).json({ success: false, msg: 'Error del servidor' });
+    }
+});
+
+// ========================================
+// 5. NUEVA RUTA: AGREGAR MASCOTA (DESDE EL CLIENTE)
+app.get('/agregar-mascota.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'agregar-mascota.html'));
+});
+
+app.post('/guardar-mascota', upload.single('foto'), async (req, res) => {
+    try {
+        const nombreUsuario = req.body.nombre_usuario;
+        if (!nombreUsuario) {
+            return res.json({ success: false, msg: 'No autenticado' });
+        }
+
+        const [usuario] = await query(
+            'SELECT id_usuario FROM usuarios WHERE nombre_completo = ?',
+            [nombreUsuario]
+        );
+
+        if (!usuario) {
+            return res.json({ success: false, msg: 'Usuario no encontrado' });
+        }
+
+        const foto = req.file ? req.file.filename : null;
+        const {
+            nombre_mascota, fecha_nacimiento, especie, raza, sexo, color,
+            peso, esterilizado = 'No', microchip = 'No', notas
+        } = req.body;
+
+        if (!nombre_mascota || !especie || !sexo) {
+            return res.json({ success: false, msg: 'Faltan datos obligatorios' });
+        }
+
+        await query(`
+            INSERT INTO mascotas 
+            (id_dueño, nombre, fecha_nacimiento, especie, raza, sexo, color, peso_kg, esterilizado, microchip, notas, foto)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                usuario.id_usuario,
+                nombre_mascota,
+                fecha_nacimiento || null,
+                especie,
+                raza || null,
+                sexo,
+                color || null,
+                peso || null,
+                esterilizado,
+                microchip,
+                notas || null,
+                foto
+            ]
+        );
+
+        console.log(`NUEVA MASCOTA AGREGADA → ${nombre_mascota} (${nombreUsuario})`);
+        res.json({ success: true });
+
+    } catch (err) {
+        console.error('ERROR AL GUARDAR NUEVA MASCOTA:', err);
+        res.status(500).json({ success: false, msg: 'Error del servidor' });
+    }
+});
+
+// ========================================
+// 6. NUEVO: API PARA CARGAR CITAS DEL USUARIO EN EL CALENDARIO
+app.get('/api/citas-usuario', async (req, res) => {
+    try {
+        const nombreUsuario = req.headers['x-nombre-usuario'];
+        if (!nombreUsuario) return res.json([]);
+
+        const [usuario] = await query('SELECT id_usuario FROM usuarios WHERE nombre_completo = ?', [nombreUsuario]);
+        if (!usuario) return res.json([]);
+
+        const citas = await query(`
+            SELECT c.*, m.nombre AS nombre_mascota 
+            FROM citas c 
+            JOIN mascotas m ON c.id_mascota = m.id_mascota 
+            WHERE c.id_usuario = ?`, 
+            [usuario.id_usuario]
+        );
+
+        const eventos = citas.map(c => ({
+            title: `${c.nombre_mascota} - ${c.motivo}`,
+            start: `${c.fecha}T${c.hora}`,
+            extendedProps: {
+                veterinario: c.veterinario,
+                notas: c.notas || ''
+            }
+        }));
+
+        res.json(eventos);
+    } catch (err) {
+        console.error('ERROR AL CARGAR CITAS:', err);
+        res.json([]);
+    }
+});
+
+// ========================================
+// 7. NUEVO: GUARDAR CITA DESDE EL CALENDARIO
+app.post('/api/guardar-cita', async (req, res) => {
+    try {
+        const { id_mascota, fecha, hora, veterinario, motivo, notas, nombre_usuario } = req.body;
+
+        if (!id_mascota || !fecha || !hora || !veterinario || !motivo || !nombre_usuario) {
+            return res.json({ success: false, msg: 'Faltan datos' });
+        }
+
+        const [usuario] = await query('SELECT id_usuario FROM usuarios WHERE nombre_completo = ?', [nombre_usuario]);
+        if (!usuario) return res.json({ success: false, msg: 'Usuario no encontrado' });
+
+        // Verificar que la mascota pertenece al usuario
+        const [mascota] = await query('SELECT 1 FROM mascotas WHERE id_mascota = ? AND id_dueño = ?', [id_mascota, usuario.id_usuario]);
+        if (!mascota) return res.json({ success: false, msg: 'Mascota no válida' });
+
+        await query(`
+            INSERT INTO citas 
+            (id_usuario, id_mascota, fecha, hora, veterinario, motivo, notas) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [usuario.id_usuario, id_mascota, fecha, hora + ':00', veterinario, motivo, notas || null]
+        );
+
+        console.log(`CITA AGENDADA → ${motivo} para ${nombre_usuario} el ${fecha} a las ${hora}`);
+        res.json({ success: true });
+
+    } catch (err) {
+        console.error('ERROR AL GUARDAR CITA:', err);
+        res.status(500).json({ success: false, msg: 'Error del servidor' });
+    }
+});
+
+// ========================================
+// SERVIR TODAS LAS PÁGINAS 
+const paginas = [
+    'login.html',
+    'ClientePrincipal.html',
+    'registro-completo.html',
+    'panel-cliente.html',
+    'agregar-mascota.html',
+    'agendar.html',           
+    'historial.html',
+    'reagendadas.html'
+];
+
+paginas.forEach(file => {
+    app.get('/' + file, (req, res) => {
+        res.sendFile(path.join(__dirname, file));
+    });
+});
+
+
+app.post('/api/HistorialCliente', async (req, res) => {
+    const { id_mascota, nombre_usuario } = req.body;
+
+    try {
+        const [rows] = await pool.query(`
+            SELECT 
+                c.id_cita,
+                c.fecha,
+                c.hora,
+                c.motivo,
+                c.veterinario,
+                c.notas,
+                c.estado,
+                m.nombre AS nombre_mascota,
+                m.especie,
+                m.raza
+            FROM citas c
+            JOIN mascotas m ON c.id_mascota = m.id_mascota
+            JOIN usuarios u ON m.id_dueño = u.id_usuario
+            WHERE c.id_mascota = ? AND u.nombre_completo = ?
+            ORDER BY c.fecha DESC, c.hora DESC
+        `, [id_mascota, nombre_usuario]);
+
+        res.json({
+            success: true,
+            citas: rows
+        });
+    } catch (error) {
+        console.error('Error en historial-citas:', error);
+        res.json({
+            success: false,
+            citas: [],
+            msg: 'Error al cargar historial'
+        });
+    }
+});
+
+
+app.post('/api/cancelar-cita', async (req, res) => {
+    const { id_cita, nombre_usuario } = req.body;
+    try {
+        await pool.query("UPDATE citas SET estado = 'cancelada' WHERE id_cita = ?", [id_cita]);
+        res.json({ success: true });
+    } catch(e) {
+        res.json({ success: false });
+    }
+});
+
+
+app.post('/api/reagendar-cita', async (req, res) => {
+    const { id_cita, nueva_fecha, nueva_hora, nombre_usuario } = req.body;
+    try {
+        await pool.query("UPDATE citas SET fecha = ?, hora = ?, estado = 'reagendada' WHERE id_cita = ?", 
+            [nueva_fecha, nueva_hora, id_cita]);
+        res.json({ success: true });
+    } catch(e) {
+        res.json({ success: false });
+    }
+});
+
+
+app.get('/api/mis-citas', async (req, res) => {
+    const nombre_usuario = req.headers['x-nombre-usuario'];
+    try {
+        const [rows] = await pool.query(`
+            SELECT c.*, m.nombre AS nombre_mascota 
+            FROM citas c 
+            JOIN mascotas m ON c.id_mascota = m.id_mascota
+            JOIN usuarios u ON m.id_dueño = u.id_usuario
+            WHERE u.nombre_completo = ? AND c.estado != 'cancelada'
+            ORDER BY c.fecha DESC
+        `, [nombre_usuario]);
+        
+        const citasFormateadas = rows.map(c => ({
+            id: c.id_cita,
+            title: `${c.nombre_mascota} - ${c.motivo}`,
+            start: `${c.fecha}T${c.hora}:00`,
+            extendedProps: { ...c, estado: c.estado || 'agendada' }
+        }));
+
+        res.json({ success: true, citas: citasFormateadas });
+    } catch(e) {
+        res.json({ success: false, citas: [] });
+    }
+});
+
+app.get('/', (req, res) => res.redirect('/login.html'));
+
+
+app.listen(3000, () => {
+    console.log('=====================================');
+    console.log('  VENIPET SERVER 100% FUNCIONAL');
+    console.log('  CALENDARIO + CITAS + TODO LISTO');
+    console.log('  http://localhost:3000/login.html');
+    console.log('=====================================');
+});

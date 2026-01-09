@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DELTA - Caja de Ventas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #007BFF 0%, #0056b3 100%);
+            min-height: 100vh;
+            font-family: 'Open Sans', sans-serif;
+            padding: 2rem 1rem;
+            color: #333;
+        }
+        header {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .logo-delta {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #007BFF, #28A745);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .search-input {
+            font-size: 1.6rem;
+            padding: 1.3rem;
+            border-radius: 50px;
+            background: rgba(255,255,255,0.95);
+            border: none;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            transition: all 0.3s;
+        }
+        .search-input:focus {
+            box-shadow: 0 0 0 0.25rem rgba(40,167,69,0.3);
+        }
+        .product-suggestion {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 20px;
+            padding: 1.2rem;
+            background: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .product-suggestion:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(40,167,69,0.25);
+        }
+        .product-icon {
+            font-size: 3.2rem;
+            color: #28A745;
+            margin-bottom: 0.8rem;
+        }
+        .product-name {
+            font-weight: 600;
+            font-size: 1.15rem;
+        }
+        .product-price {
+            font-size: 1.3rem;
+            color: #28A745;
+            font-weight: bold;
+        }
+        .cart-card {
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .cart-header {
+            background: #007BFF;
+            color: white;
+        }
+        .cart-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        .total-card {
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            padding: 2rem;
+            text-align: center;
+        }
+        .total-card h3 {
+            color: #28A745;
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+        }
+        .total-card h1 {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #212529;
+        }
+        .btn-cobrar {
+            background: #28A745;
+            color: white;
+            font-size: 1.6rem;
+            padding: 1.4rem;
+            border-radius: 30px;
+            transition: all 0.3s;
+        }
+        .btn-cobrar:hover {
+            background: #218838;
+            transform: translateY(-3px);
+        }
+        .btn-cancelar {
+            background: #dc3545;
+            color: white;
+            font-size: 1.4rem;
+            padding: 1.2rem;
+            border-radius: 30px;
+        }
+        .btn-cancelar:hover {
+            background: #c82333;
+        }
+        .btn-logout {
+            background: #dc3545;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            color: white;
+        }
+        .quantity-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.6rem;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .btn-remove {
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.4rem;
+        }
+        .client-info {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .btn-descuento {
+            background: #ffc107;
+            color: #212529;
+            border-radius: 30px;
+            padding: 0.8rem 1.5rem;
+            font-weight: bold;
+        }
+        .points-badge {
+            background: #28A745;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="bg-white rounded-pill shadow-lg p-4 mb-5">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-lg-6 d-flex align-items-center gap-4">
+                    <div class="logo-delta">Δ</div>
+                    <h1 class="mb-0 display-5 fw-bold text-primary">DELTA</h1>
+                </div>
+                <div class="col-lg-6 text-end">
+                    <div class="d-inline-flex align-items-center gap-3">
+                        <i class="bi bi-person-circle fs-2 text-primary"></i>
+                        <span id="nombreUsuario" class="fw-bold fs-5 text-dark">Cargando...</span>
+                        <button class="btn btn-logout px-4" onclick="cerrarSesion()">
+                            <i class="bi bi-box-arrow-right me-2"></i>Salir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row mb-4 g-3">
+            <div class="col-md-8">
+                <input type="text" id="buscarProducto" class="form-control search-input"
+                       placeholder="🔍 Escanea código o escribe nombre del producto..." autofocus>
+            </div>
+            <div class="col-md-4">
+                <input type="text" id="buscarCliente" class="form-control search-input"
+                       placeholder="👤 Buscar cliente (nombre/teléfono)">
+            </div>
+        </div>
+
+        <div id="infoCliente" class="d-none client-info">
+            <h4>Cliente: <span id="nombreCliente"></span></h4>
+            <p>Puntos actuales: <strong id="puntosCliente" class="points-badge">0 pts</strong></p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card cart-card h-100">
+                    <div class="card-header cart-header d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">Carrito de Venta</h3>
+                        <button class="btn btn-descuento" onclick="aplicarDescuento()">
+                            <i class="bi bi-percent"></i> Descuento
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0 cart-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio</th>
+                                    <th>Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="carritoBody">
+                                <tr class="text-center text-muted">
+                                    <td colspan="5">El carrito está vacío</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card total-card text-center p-4 mb-4">
+                    <h3>Total a pagar</h3>
+                    <h1 id="totalVenta">$0.00</h1>
+                    <hr class="bg-white opacity-75 my-4">
+                    <p class="fs-5 mb-2">Descuento: <span id="descuento">$0.00</span></p>
+                    <p class="fs-4 mb-0">Puntos ganados: <span id="puntosGanados">0</span> pts</p>
+                </div>
+
+                <select id="metodoPago" class="form-select form-select-lg mb-4">
+                    <option value="Efectivo">💵 Efectivo</option>
+                    <option value="Tarjeta">💳 Tarjeta</option>
+                </select>
+
+                <button class="btn btn-cobrar w-100 mb-3" id="btnCobrar">
+                    <i class="bi bi-cash-stack fs-3 me-2"></i> COBRAR
+                </button>
+
+                <button class="btn btn-cancelar w-100" onclick="cancelarVenta()">
+                    <i class="bi bi-x-circle fs-3 me-2"></i> CANCELAR VENTA
+                </button>
+
+                <div class="mt-5">
+                    <h4 class="mb-4 text-center">Productos más vendidos</h4>
+                    <div class="row g-3" id="sugeridos">
+                        <!-- Se llenan con JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cobro -->
+    <div class="modal fade" id="modalCobro">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Cobro en Efectivo</h5>
+                </div>
+                <div class="modal-body text-center">
+                    <h2>Total: <span id="modalTotal">$0.00</span></h2>
+                    <h4>Método: <span id="modalMetodo">Efectivo</span></h4>
+                    <div id="efectivoSection">
+                        <label class="form-label fs-4">Cantidad recibida</label>
+                        <input type="number" id="recibido" class="form-control form-control-lg text-center" step="0.01" placeholder="0.00">
+                        <h3 class="mt-4 text-success">Cambio: <span id="cambio">$0.00</span></h3>
+                    </div>
+                    <div class="text-center mt-4">
+                        <p class="fs-5">Puntos ganados: <strong id="modalPuntos">0</strong> pts</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-success btn-lg" id="btnConfirmarCobro">Confirmar y Imprimir Ticket</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let carrito = [];
+        let productos = [];
+        let clientes = [];
+        let clienteSeleccionado = null;
+        let descuento = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('nombreUsuario').textContent = localStorage.getItem('nombreUsuario') || 'Cajero';
+            cargarProductos();
+            cargarClientes();
+            document.getElementById('buscarProducto').focus();
+        });
+
+        function cerrarSesion() {
+            Swal.fire({ title: '¿Cerrar sesión?', icon: 'question', showCancelButton: true })
+                .then(r => { if (r.isConfirmed) { localStorage.clear(); location.href = 'login.html'; }});
+        }
+
+        async function cargarProductos() {
+            try {
+                const res = await fetch('/api/productos');
+                const data = await res.json();
+                if (data.success) {
+                    productos = data.productos.map(p => ({
+                        ...p,
+                        precio_venta: parseFloat(p.precio_venta)
+                    }));
+                    mostrarSugeridos();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function cargarClientes() {
+            try {
+                const res = await fetch('/api/clientes');
+                const data = await res.json();
+                if (data.success) clientes = data.clientes;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        document.getElementById('buscarCliente').addEventListener('input', () => {
+            const term = document.getElementById('buscarCliente').value.trim().toLowerCase();
+            if (term === '') {
+                clienteSeleccionado = null;
+                document.getElementById('infoCliente').classList.add('d-none');
+                return;
+            }
+
+            const encontrado = clientes.find(c => 
+                c.nombre.toLowerCase().includes(term) || 
+                (c.telefono && c.telefono.includes(term))
+            );
+
+            if (encontrado) {
+                clienteSeleccionado = encontrado;
+                document.getElementById('nombreCliente').textContent = encontrado.nombre;
+                document.getElementById('puntosCliente').textContent = encontrado.puntos || 0;
+                document.getElementById('infoCliente').classList.remove('d-none');
+            } else {
+                clienteSeleccionado = null;
+                document.getElementById('infoCliente').classList.add('d-none');
+            }
+        });
+
+        function getIconoProducto(nombre) {
+            nombre = nombre.toLowerCase();
+            if (nombre.includes('coca') || nombre.includes('refresco')) return '<i class="bi bi-cup-straw"></i>';
+            if (nombre.includes('galletas') || nombre.includes('pan')) return '<i class="bi bi-basket-fill"></i>';
+            if (nombre.includes('leche') || nombre.includes('yogurt')) return '<i class="bi bi-egg-fried"></i>';
+            if (nombre.includes('sabritas')) return '<i class="bi bi-bag-fill"></i>';
+            if (nombre.includes('agua')) return '<i class="bi bi-droplet-fill"></i>';
+            if (nombre.includes('detergente') || nombre.includes('shampoo')) return '<i class="bi bi-bucket-fill"></i>';
+            if (nombre.includes('café')) return '<i class="bi bi-cup-hot-fill"></i>';
+            return '<i class="bi bi-box-seam-fill"></i>';
+        }
+
+        function mostrarSugeridos() {
+            const contenedor = document.getElementById('sugeridos');
+            contenedor.innerHTML = '';
+            const sugeridos = productos.slice(0, 8);
+
+            sugeridos.forEach(p => {
+                const icono = getIconoProducto(p.nombre);
+                const col = document.createElement('div');
+                col.className = 'col-6 col-md-4';
+                col.innerHTML = `
+                    <div class="product-suggestion" onclick="agregarRapido(${p.id_producto})">
+                        <div class="product-icon">${icono}</div>
+                        <div class="product-name">${p.nombre}</div>
+                        <div class="product-price">$ ${p.precio_venta.toFixed(2)}</div>
+                        <small class="text-muted">Stock: ${p.stock}</small>
+                    </div>
+                `;
+                contenedor.appendChild(col);
+            });
+        }
+
+        window.agregarRapido = (id) => agregarProducto(id);
+
+        document.getElementById('buscarProducto').addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                const term = e.target.value.trim();
+                if (!term) return;
+
+                const producto = productos.find(p => 
+                    p.codigo_barras === term || 
+                    p.nombre.toLowerCase().includes(term.toLowerCase())
+                );
+
+                if (!producto) {
+                    Swal.fire('No encontrado', 'Producto no existe', 'error');
+                    e.target.value = '';
+                    return;
+                }
+
+                if (producto.stock <= 0) {
+                    Swal.fire('Sin stock', 'No hay unidades', 'error');
+                    e.target.value = '';
+                    return;
+                }
+
+                agregarProducto(producto.id_producto);
+                e.target.value = '';
+            }
+        });
+
+        function agregarProducto(id) {
+            const producto = productos.find(p => p.id_producto === id);
+            if (!producto || producto.stock <= 0) return;
+
+            const existente = carrito.find(item => item.id_producto === id);
+            if (existente) {
+                if (existente.cantidad < producto.stock) existente.cantidad++;
+                else Swal.fire('Límite', 'No hay más stock', 'warning');
+            } else {
+                carrito.push({
+                    id_producto: id,
+                    nombre: producto.nombre,
+                    precio: producto.precio_venta,
+                    cantidad: 1
+                });
+            }
+            renderCarrito();
+        }
+
+        function renderCarrito() {
+            const tbody = document.getElementById('carritoBody');
+            tbody.innerHTML = '';
+
+            if (carrito.length === 0) {
+                tbody.innerHTML = '<tr class="text-center text-muted"><td colspan="5">El carrito está vacío</td></tr>';
+                actualizarTotal();
+                return;
+            }
+
+            let subtotal = 0;
+            carrito.forEach((item, index) => {
+                const linea = item.precio * item.cantidad;
+                subtotal += linea;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.nombre}</strong></td>
+                    <td>
+                        <div class="d-flex justify-content-center align-items-center gap-2">
+                            <button class="btn btn-outline-secondary quantity-btn" onclick="cambiarCantidad(${index}, -1)">-</button>
+                            <span class="fw-bold fs-4">${item.cantidad}</span>
+                            <button class="btn btn-outline-secondary quantity-btn" onclick="cambiarCantidad(${index}, 1)">+</button>
+                        </div>
+                    </td>
+                    <td>$${item.precio.toFixed(2)}</td>
+                    <td class="fw-bold text-success">$${linea.toFixed(2)}</td>
+                    <td><button class="btn btn-remove" onclick="eliminarItem(${index})"><i class="bi bi-trash"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            actualizarTotal(subtotal);
+        }
+
+        function actualizarTotal(subtotal = 0) {
+            const total = subtotal - descuento;
+            document.getElementById('totalVenta').textContent = '$' + total.toFixed(2);
+            const puntosGanados = Math.floor(total / 10);
+            document.getElementById('puntosGanados').textContent = puntosGanados;
+        }
+
+        function aplicarDescuento() {
+            Swal.fire({
+                title: 'Aplicar descuento',
+                html: `
+                    <select id="tipoDescuento" class="form-select mb-3">
+                        <option value="porcentaje">Porcentaje (%)</option>
+                        <option value="cantidad">Cantidad fija ($)</option>
+                    </select>
+                    <input type="number" id="valorDescuento" class="form-control" placeholder="Valor" step="0.01">
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Aplicar',
+                preConfirm: () => {
+                    const tipo = document.getElementById('tipoDescuento').value;
+                    const valor = parseFloat(document.getElementById('valorDescuento').value) || 0;
+                    return { tipo, valor };
+                }
+            }).then(result => {
+                if (result.isConfirmed) {
+                    let subtotal = carrito.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+                    if (result.value.tipo === 'porcentaje') {
+                        descuento = subtotal * (result.value.valor / 100);
+                    } else {
+                        descuento = result.value.valor;
+                    }
+                    if (descuento > subtotal) descuento = subtotal;
+                    actualizarTotal(subtotal);
+                    Swal.fire('Descuento aplicado', '$' + descuento.toFixed(2), 'success');
+                }
+            });
+        }
+
+        window.cambiarCantidad = (index, delta) => {
+            const item = carrito[index];
+            const producto = productos.find(p => p.id_producto === item.id_producto);
+            const nuevaCant = item.cantidad + delta;
+
+            if (nuevaCant <= 0) {
+                eliminarItem(index);
+                return;
+            }
+
+            if (nuevaCant > producto.stock) {
+                Swal.fire('Sin stock', 'No hay suficientes unidades', 'warning');
+                return;
+            }
+
+            item.cantidad = nuevaCant;
+            renderCarrito();
+        };
+
+        window.eliminarItem = (index) => {
+            carrito.splice(index, 1);
+            renderCarrito();
+        };
+
+        function cancelarVenta() {
+            Swal.fire({ title: '¿Cancelar venta?', icon: 'warning', showCancelButton: true })
+                .then(r => { if (r.isConfirmed) { carrito = []; descuento = 0; clienteSeleccionado = null; document.getElementById('infoCliente').classList.add('d-none'); renderCarrito(); }});
+        }
+
+        document.getElementById('btnCobrar').addEventListener('click', () => {
+            if (carrito.length === 0) {
+                Swal.fire('Error', 'El carrito está vacío', 'error');
+                return;
+            }
+            const subtotal = carrito.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+            const total = subtotal - descuento;
+            document.getElementById('modalTotal').textContent = '$' + total.toFixed(2);
+            document.getElementById('modalMetodo').textContent = document.getElementById('metodoPago').value;
+            document.getElementById('efectivoSection').style.display = document.getElementById('metodoPago').value === 'Efectivo' ? 'block' : 'none';
+            document.getElementById('recibido').value = '';
+            document.getElementById('cambio').textContent = '$0.00';
+            const puntosGanados = Math.floor(total / 10);
+            document.getElementById('modalPuntos').textContent = puntosGanados;
+            new bootstrap.Modal(document.getElementById('modalCobro')).show();
+        });
+
+        document.getElementById('recibido').addEventListener('input', () => {
+            const total = parseFloat(document.getElementById('modalTotal').textContent.replace('$', '')) || 0;
+            const recibido = parseFloat(document.getElementById('recibido').value) || 0;
+            const cambio = recibido - total;
+            document.getElementById('cambio').textContent = cambio >= 0 ? '$' + cambio.toFixed(2) : '$0.00';
+        });
+
+        document.getElementById('btnConfirmarCobro').addEventListener('click', () => {
+            const total = parseFloat(document.getElementById('modalTotal').textContent.replace('$', '')) || 0;
+            const metodo = document.getElementById('metodoPago').value;
+            const recibido = metodo === 'Efectivo' ? parseFloat(document.getElementById('recibido').value) || 0 : total;
+
+            if (metodo === 'Efectivo' && recibido < total) {
+                Swal.fire('Error', 'Cantidad insuficiente', 'error');
+                return;
+            }
+
+            const puntosGanados = Math.floor(total / 10);
+
+            let ticketHTML = `
+                <div style="font-family: monospace; text-align: center; padding: 1rem;">
+                    <h2>DELTA POS</h2>
+                    <p>Gracias por tu compra</p>
+                    <hr>
+                    ${carrito.map(item => `<p>${item.nombre} x${item.cantidad} = $${(item.precio * item.cantidad).toFixed(2)}</p>`).join('')}
+                    <hr>
+                    <p><strong>Total: $${total.toFixed(2)}</strong></p>
+                    ${descuento > 0 ? `<p>Descuento: $${descuento.toFixed(2)}</p>` : ''}
+                    <p>Pago: ${metodo}</p>
+                    ${metodo === 'Efectivo' ? `<p>Recibido: $${recibido.toFixed(2)}<br>Cambio: $${(recibido - total).toFixed(2)}</p>` : ''}
+                    ${clienteSeleccionado ? `<p>Cliente: ${clienteSeleccionado.nombre}<br>Puntos ganados: ${puntosGanados}</p>` : ''}
+                    <p>Fecha: ${new Date().toLocaleString()}</p>
+                </div>
+            `;
+
+            Swal.fire({
+                title: '¡Venta completada!',
+                html: ticketHTML,
+                icon: 'success',
+                showCancelButton: true,
+                confirmButtonText: 'Imprimir',
+                cancelButtonText: 'Cerrar'
+            }).then(r => {
+                if (r.isConfirmed) window.print();
+            });
+
+            carrito = [];
+            descuento = 0;
+            clienteSeleccionado = null;
+            document.getElementById('infoCliente').classList.add('d-none');
+            renderCarrito();
+            bootstrap.Modal.getInstance(document.getElementById('modalCobro')).hide();
+            document.getElementById('buscarProducto').focus();
+        });
+    </script>
+</body>
+</html>

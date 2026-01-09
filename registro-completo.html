@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeniPet - Registro Completo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            padding: 2rem 1rem;
+        }
+        header { animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        .logo-circle {
+            width: 70px; height: 70px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; box-shadow: 0 12px 30px rgba(79,172,254,0.5);
+        }
+        .form-card {
+            background: white;
+            border-radius: 2.5rem;
+            padding: 3rem;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.28);
+        }
+        .section-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.2rem 1.5rem;
+            border-radius: 1.5rem;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .btn-venipet {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            padding: 1rem 3.5rem;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CABECERA -->
+    <header class="bg-white rounded-pill shadow-lg p-4 mb-5">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-lg-6 d-flex align-items-center gap-4">
+                    <div class="logo-circle">Huella</div>
+                    <h1 class="mb-0 display-5 fw-bold text-primary">VeniPet</h1>
+                </div>
+                <div class="col-lg-6 text-end">
+                    <button class="btn btn-danger text-white px-4" onclick="location.href='login.html'">
+                        <i class="bi bi-box-arrow-right me-2"></i>Salir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-11">
+                <div class="form-card">
+                    <div class="text-center mb-5">
+                        <i class="bi bi-heart-pulse-fill text-primary" style="font-size: 5rem;"></i>
+                        <h2 class="fw-bold mt-3">Registro Completo - Dueño y Mascota</h2>
+                        <p class="text-muted fs-5">Completa ambos lados para comenzar a usar VeniPet</p>
+                    </div>
+
+                    <!-- FORMULARIO CORREGIDO -->
+                    <form id="registroForm" enctype="multipart/form-data">
+                        <div class="row g-5">
+
+                            <!-- DUEÑO -->
+                            <div class="col-lg-6">
+                                <div class="section-header">
+                                    <i class="bi bi-person-fill me-3"></i> Datos del Dueño
+                                </div>
+                                <div class="row g-4">
+                                    <div class="col-12"><input type="text" name="nombre_completo" class="form-control form-control-lg" placeholder="Nombre completo" required></div>
+                                    <div class="col-12"><input type="tel" name="telefono" class="form-control form-control-lg" placeholder="Teléfono celular" required></div>
+                                    <div class="col-12"><input type="email" name="email" class="form-control form-control-lg" placeholder="Correo electrónico" required></div>
+                                    <div class="col-6"><input type="text" name="codigo_postal" class="form-control form-control-lg" placeholder="Código Postal"></div>
+                                    <div class="col-6"><input type="text" name="colonia" class="form-control form-control-lg" placeholder="Colonia"></div>
+                                    <div class="col-12"><textarea name="direccion" class="form-control form-control-lg" rows="3" placeholder="Dirección completa"></textarea></div>
+                                </div>
+                            </div>
+
+                            <!-- MASCOTA -->
+                            <div class="col-lg-6">
+                                <div class="section-header">
+                                    <i class="bi bi-shield-shaded me-3"></i> Datos de la Mascota
+                                </div>
+                                <div class="row g-4">
+                                    <div class="col-12"><input type="text" name="nombre_mascota" class="form-control form-control-lg" placeholder="Nombre de la mascota" required></div>
+                                    <div class="col-6"><input type="date" name="fecha_nacimiento" class="form-control form-control-lg" required></div>
+                                    <div class="col-6">
+                                        <select name="especie" class="form-select form-control-lg" required>
+                                            <option value="" disabled selected>Especie</option>
+                                            <option>Perro</option><option>Gato</option><option>Conejo</option><option>Ave</option><option>Otro</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6"><input type="text" name="raza" class="form-control form-control-lg" placeholder="Raza"></div>
+                                    <div class="col-6">
+                                        <select name="sexo" class="form-select form-control-lg" required>
+                                            <option value="" disabled selected>Sexo</option>
+                                            <option>Macho</option><option>Hembra</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6"><input type="text" name="color" class="form-control form-control-lg" placeholder="Color"></div>
+                                    <div class="col-6"><input type="number" step="0.1" name="peso" class="form-control form-control-lg" placeholder="Peso (kg)"></div>
+                                    <div class="col-6">
+                                        <select name="esterilizado" class="form-select form-control-lg">
+                                            <option value="No" selected>No</option>
+                                            <option value="Sí">Sí</option>
+                                        </option>
+                                    </div>
+                                    <div class="col-6">
+                                        <select name="microchip" class="form-select form-control-lg">
+                                            <option value="No" selected>No</option>
+                                            <option value="Sí">Sí</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12"><textarea name="notas" class="form-control form-control-lg" rows="3" placeholder="Alergias, notas importantes..."></textarea></div>
+                                    <div class="col-12">
+                                        <input type="file" name="foto" accept="image/*" class="form-control form-control-lg">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-5">
+                            <button type="submit" class="btn btn-venipet text-white shadow-lg">
+                                <i class="bi bi-check2-circle fs-4 me-3"></i>
+                                Guardar y Entrar al Panel Principal
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registroForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+
+   const res = await fetch('/guardar-registro', {   
+    method: 'POST',
+    body: formData
+});
+            const data = await res.json();
+
+            if (data.success) {
+                Swal.fire('Éxito', 'Registro completado correctamente', 'success')
+                    .then(() => location.href = data.redirect);
+            } else {
+                Swal.fire('Error', data.msg || 'Ocurrió un error', 'error');
+            }
+        };
+    </script>
+</body>
+</html>
